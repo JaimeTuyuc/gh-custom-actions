@@ -11,6 +11,14 @@ inputs:
     # You can also use ${{ github.event.inputs.caching }}
     # See: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#inputs
     # for more information
+outputs:
+  used-cached:
+    description: 'Cache was used.'
+    value: ${{ steps.install.outputs.cache }}
+    # The output id is used to access the value of the output
+    # In this case, you can access the value with ${{ steps.cache.outputs.cache-hit }}
+    # See: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs
+    # for more information
 runs:
   using: 'composite'
   steps:
@@ -22,6 +30,10 @@ runs:
       path: node_modules
       key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
   - name: Install dependencies
+    id: install
     if: steps.cache.outputs.cache-hit != 'true' || inputs.caching != 'true'
-    run: npm ci
+    run: |
+      npm ci
+      # echo "::set-output name=cache-hit::false"
+      echo "cache='${{ inputs.caching }}'" >> $GITHUB_OUTPUT
     shell: bash
