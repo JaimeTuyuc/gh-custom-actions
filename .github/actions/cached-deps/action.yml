@@ -1,15 +1,27 @@
 name: 'Get & Cache Dependencies'
 description: 'Get the dependencies and cache them for future builds, via (npm)'
+# How to accept inputs: in a custom action
+inputs:
+  caching:
+    description: 'Whether to use caching or not'
+    required: false
+    default: 'true'
+    # The input id is used to access the value of the input
+    # In this case, you can access the value with ${{ inputs.caching }}
+    # You can also use ${{ github.event.inputs.caching }}
+    # See: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#inputs
+    # for more information
 runs:
   using: 'composite'
   steps:
   - name: Cache dependencies
+    if: ${{ inputs.caching == 'true' }}
     id: cache
     uses: actions/cache@v3
     with:
       path: node_modules
       key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
   - name: Install dependencies
-    if: steps.cache.outputs.cache-hit != 'true'
+    if: steps.cache.outputs.cache-hit != 'true' || inputs.caching != 'true'
     run: npm ci
     shell: bash
